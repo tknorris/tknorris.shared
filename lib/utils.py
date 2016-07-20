@@ -19,7 +19,25 @@ import datetime
 import time
 import re
 import json
+import urllib2
+import urllib
+import urlparse
+import os
+import kodi
+import log_utils
 import xbmcgui
+import xbmcvfs
+import xbmc
+
+def __enum(**enums):
+    return type('Enum', (), enums)
+
+PROGRESS = __enum(OFF=0, WINDOW=1, BACKGROUND=2)
+CHUNK_SIZE = 512 * 1024
+DEFAULT_EXT = 'mpg'
+BROWSER_UA = 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'
+INTERVALS = 5
+WATCHLIST_SLUG = 'watchlist_slug'
 
 def make_list_item(label, meta, make_art=None):
     art = {} if make_art is None else make_art(meta)
@@ -92,3 +110,153 @@ def _byteify(data, ignore_dicts=False):
         return dict([(_byteify(key, ignore_dicts=True), _byteify(value, ignore_dicts=True)) for key, value in data.iteritems()])
     return data
 
+def download_media(url, path, file_name, translations):
+    try:
+        i18n = translations.i18n
+        progress = int(kodi.get_setting('down_progress'))
+        active = not progress == PROGRESS.OFF
+        background = progress == PROGRESS.BACKGROUND
+        with kodi.ProgressDialog(kodi.get_name(), i18n('downloading') % (file_name), background=background, active=active) as pd:
+            try:
+                headers = dict([item.split('=') for item in (url.split('|')[1]).split('&')])
+                for key in headers: headers[key] = urllib.unquote(headers[key])
+            except:
+                headers = {}
+            if 'User-Agent' not in headers: headers['User-Agent'] = BROWSER_UA
+            request = urllib2.Request(url.split('|')[0], headers=headers)
+            response = urllib2.urlopen(request)
+            if 'Content-Length' in response.info():
+                content_length = int(response.info()['Content-Length'])
+            else:
+                content_length = 0
+    
+            file_name += '.' + get_extension(url, response)
+            full_path = os.path.join(path, file_name)
+            log_utils.log('Downloading: %s -> %s' % (url, full_path), log_utils.LOGDEBUG)
+    
+            path = xbmc.makeLegalFilename(path)
+            try:
+                try: xbmcvfs.mkdirs(path)
+                except: os.makedirs(path)
+            except Exception as e:
+                log_utils.log('Path Create Failed: %s (%s)' % (e, path), log_utils.LOGDEBUG)
+    
+            if not path.endswith(os.sep): path += os.sep
+            if not xbmcvfs.exists(path):
+                raise Exception(i18n('failed_create_dir'))
+            
+            file_desc = xbmcvfs.File(full_path, 'w')
+            total_len = 0
+            cancel = False
+            while True:
+                data = response.read(CHUNK_SIZE)
+                if not data:
+                    break
+    
+                if pd.is_canceled():
+                    cancel = True
+                    break
+    
+                total_len += len(data)
+                if not file_desc.write(data):
+                    raise Exception(i18n('failed_write_file'))
+    
+                percent_progress = (total_len) * 100 / content_length if content_length > 0 else 0
+                log_utils.log('Position : %s / %s = %s%%' % (total_len, content_length, percent_progress), log_utils.LOGDEBUG)
+                pd.update(percent_progress)
+            
+            file_desc.close()
+
+        if not cancel:
+            kodi.notify(msg=i18n('download_complete') % (file_name), duration=5000)
+            log_utils.log('Download Complete: %s -> %s' % (url, full_path), log_utils.LOGDEBUG)
+
+    except Exception as e:
+        log_utils.log('Error (%s) during download: %s -> %s' % (str(e), url, file_name), log_utils.LOGERROR)
+        kodi.notify(msg=i18n('download_error') % (str(e), file_name), duration=5000)
+
+def get_extension(url, response):
+    filename = url2name(url)
+    if 'Content-Disposition' in response.info():
+        cd_list = response.info()['Content-Disposition'].split('filename=')
+        if len(cd_list) > 1:
+            filename = cd_list[-1]
+            if filename[0] == '"' or filename[0] == "'":
+                filename = filename[1:-1]
+    elif response.url != url:
+        filename = url2name(response.url)
+    ext = os.path.splitext(filename)[1][1:]
+    if not ext: ext = DEFAULT_EXT
+    return ext
+
+def create_legal_filename(title, year):
+    filename = title
+    if year: filename += ' %s' % (year)
+    filename = re.sub(r'(?!%s)[^\w\-_\.]', '.', filename)
+    filename = re.sub('\.+', '.', filename)
+    xbmc.makeLegalFilename(filename)
+    return filename
+
+def url2name(url):
+    return os.path.basename(urllib.unquote(urlparse.urlsplit(url)[2]))
+
+def auth_trakt(Trakt_API, translations):
+    i18n = translations.i18n
+    start = time.time()
+    use_https = kodi.get_setting('use_https') == 'true'
+    trakt_timeout = int(kodi.get_setting('trakt_timeout'))
+    trakt_api = Trakt_API(use_https=use_https, timeout=trakt_timeout)
+    result = trakt_api.get_code()
+    code, expires, interval = result['device_code'], result['expires_in'], result['interval']
+    time_left = expires - int(time.time() - start)
+    line1 = i18n('verification_url') % (result['verification_url'])
+    line2 = i18n('prompt_code') % (result['user_code'])
+    line3 = i18n('code_expires') % (time_left)
+    with kodi.ProgressDialog(i18n('trakt_acct_auth'), line1=line1, line2=line2, line3=line3) as pd:
+        pd.update(100)
+        while time_left:
+            for _ in range(INTERVALS):
+                kodi.sleep(interval * 1000 / INTERVALS)
+                if pd.is_canceled(): return
+
+            try:
+                result = trakt_api.get_device_token(code)
+                break
+            except urllib2.URLError as e:
+                # authorization is pending; too fast
+                if e.code in [400, 429]:
+                    pass
+                elif e.code == 418:
+                    kodi.notify(msg=i18n('user_reject_auth'), duration=3000)
+                    return
+                elif e.code == 410:
+                    break
+                else:
+                    raise
+                
+            time_left = expires - int(time.time() - start)
+            progress = time_left * 100 / expires
+            pd.update(progress, line3=i18n('code_expires') % (time_left))
+        
+    try:
+        kodi.set_setting('trakt_oauth_token', result['access_token'])
+        kodi.set_setting('trakt_refresh_token', result['refresh_token'])
+        trakt_api = Trakt_API(result['access_token'], use_https=use_https, timeout=trakt_timeout)
+        profile = trakt_api.get_user_profile(cached=False)
+        kodi.set_setting('trakt_user', '%s (%s)' % (profile['username'], profile['name']))
+        kodi.notify(msg=i18n('trakt_auth_complete'), duration=3000)
+    except Exception as e:
+        log_utils.log('Trakt Authorization Failed: %s' % (e), log_utils.LOGDEBUG)
+
+def choose_list(Trakt_API, translations, username=None):
+    i18n = translations.i18n
+    trakt_api = Trakt_API(kodi.get_setting('trakt_oauth_token'), kodi.get_setting('use_https') == 'true', timeout=int(kodi.get_setting('trakt_timeout')))
+    lists = trakt_api.get_lists(username)
+    if username is None: lists.insert(0, {'name': 'watchlist', 'ids': {'slug': WATCHLIST_SLUG}})
+    if lists:
+        dialog = xbmcgui.Dialog()
+        index = dialog.select(i18n('pick_a_list'), [list_data['name'] for list_data in lists])
+        if index > -1:
+            return (lists[index]['ids']['slug'], lists[index]['name'])
+    else:
+        kodi.notify(msg=i18n('no_lists_for_user') % (username), duration=5000)
