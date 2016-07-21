@@ -53,6 +53,11 @@ def set_setting(id, value):
     if not isinstance(value, basestring): value = str(value)
     addon.setSetting(id, value)
 
+def accumulate_setting(setting, addend=1):
+    cur_value = get_setting(setting)
+    cur_value = int(cur_value) if cur_value else 0
+    set_setting(setting, cur_value + addend)
+
 def get_version():
     return addon.getAddonInfo('version')
 

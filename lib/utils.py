@@ -260,3 +260,12 @@ def choose_list(Trakt_API, translations, username=None):
             return (lists[index]['ids']['slug'], lists[index]['name'])
     else:
         kodi.notify(msg=i18n('no_lists_for_user') % (username), duration=5000)
+
+def format_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    if minutes > 60:
+        hours, minutes = divmod(minutes, 60)
+        return "%02d:%02d:%02d" % (hours, minutes, seconds)
+    else:
+        return "%02d:%02d" % (minutes, seconds)
+
