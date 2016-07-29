@@ -27,6 +27,7 @@ else:
     enabled_comp = None
 
 def log(msg, level=LOGDEBUG, component=None):
+    req_level = level
     # override message level to force logging when addon logging turned on
     if kodi.get_setting('addon_debug') == 'true' and level == LOGDEBUG:
         level = LOGNOTICE
@@ -35,8 +36,9 @@ def log(msg, level=LOGDEBUG, component=None):
         if isinstance(msg, unicode):
             msg = '%s (ENCODED)' % (msg.encode('utf-8'))
 
-        if enabled_comp is None or component in enabled_comp:
+        if req_level != LOGDEBUG or (enabled_comp is None or component in enabled_comp):
             kodi.__log('%s: %s' % (name, msg), level)
+            
     except Exception as e:
         try: kodi.__log('Logging Failure: %s' % (e), level)
         except: pass  # just give up
