@@ -1,2 +1,5 @@
-[B]Version 1.0.0[/B]
+[B]Version 0.0.2[/B]
+- Add optional component specific logging
+
+[B]Version 0.0.1[/B]
 - Initial Release.
