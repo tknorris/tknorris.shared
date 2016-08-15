@@ -1,3 +1,6 @@
+[B]Version 0.0.3[/B]
+Force strptime import to avoid python bug
+
 [B]Version 0.0.2[/B]
 - Add optional component specific logging
 
