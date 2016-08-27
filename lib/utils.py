@@ -212,33 +212,9 @@ def auth_trakt(Trakt_API, translations):
     time_left = expires - int(time.time() - start)
     line1 = i18n('verification_url') % (result['verification_url'])
     line2 = i18n('prompt_code') % (result['user_code'])
-    line3 = i18n('code_expires') % (time_left)
-    with kodi.ProgressDialog(i18n('trakt_acct_auth'), line1=line1, line2=line2, line3=line3) as pd:
-        pd.update(100)
-        while time_left:
-            for _ in range(INTERVALS):
-                kodi.sleep(interval * 1000 / INTERVALS)
-                if pd.is_canceled(): return
-
-            try:
-                result = trakt_api.get_device_token(code)
-                break
-            except urllib2.URLError as e:
-                # authorization is pending; too fast
-                if e.code in [400, 429]:
-                    pass
-                elif e.code == 418:
-                    kodi.notify(msg=i18n('user_reject_auth'), duration=3000)
-                    return
-                elif e.code == 410:
-                    break
-                else:
-                    raise
-                
-            time_left = expires - int(time.time() - start)
-            progress = time_left * 100 / expires
-            pd.update(progress, line3=i18n('code_expires') % (time_left))
-        
+    with kodi.CountdownDialog(i18n('trakt_acct_auth'), line1=line1, line2=line2, countdown=time_left, interval=interval) as cd:
+        result = cd.start(__auth_trakt, [trakt_api, code, i18n])
+    
     try:
         kodi.set_setting('trakt_oauth_token', result['access_token'])
         kodi.set_setting('trakt_refresh_token', result['refresh_token'])
@@ -248,6 +224,23 @@ def auth_trakt(Trakt_API, translations):
         kodi.notify(msg=i18n('trakt_auth_complete'), duration=3000)
     except Exception as e:
         log_utils.log('Trakt Authorization Failed: %s' % (e), log_utils.LOGDEBUG)
+        
+        
+def __auth_trakt(trakt_api, code, i18n):
+    try:
+        result = trakt_api.get_device_token(code)
+        return result
+    except urllib2.URLError as e:
+        # authorization is pending; too fast
+        if e.code in [400, 429]:
+            return
+        elif e.code == 418:
+            kodi.notify(msg=i18n('user_reject_auth'), duration=3000)
+            return True
+        elif e.code == 410:
+            return
+        else:
+            raise
 
 def choose_list(Trakt_API, translations, username=None):
     i18n = translations.i18n
