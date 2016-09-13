@@ -199,6 +199,7 @@ def create_legal_filename(title, year):
     return filename
 
 def url2name(url):
+    url = url.split('|')[0]
     return os.path.basename(urllib.unquote(urlparse.urlsplit(url)[2]))
 
 def auth_trakt(Trakt_API, translations):
