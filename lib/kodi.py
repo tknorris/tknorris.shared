@@ -127,6 +127,9 @@ def notify(header=None, msg='', duration=2000, sound=None, icon_path=None):
         builtin = "XBMC.Notification(%s,%s, %s, %s)" % (header, msg, duration, icon_path)
         xbmc.executebuiltin(builtin)
     
+def close_all():
+    xbmc.executebuiltin('Dialog.Close(all)')
+    
 def get_current_view():
     skinPath = translate_path('special://skin/')
     xml = os.path.join(skinPath, 'addon.xml')
@@ -283,7 +286,7 @@ class CountdownDialog(object):
             return result
         
         start = time.time()
-        expires = time_left = self.countdown
+        expires = time_left = int(self.countdown)
         interval = self.interval
         while time_left > 0:
             for _ in range(CountdownDialog.__INTERVALS):
