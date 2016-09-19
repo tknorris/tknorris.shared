@@ -17,7 +17,6 @@
 """
 import xbmcgui
 import kodi
-import log_utils
 
 class ProgressDialog(object):
     def create(self, heading, line1='', line2='', line3=''):
