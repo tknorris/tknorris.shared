@@ -44,6 +44,7 @@ class ProgressDialog(object):
     
     def close(self):
         self.dialog.close()
+        del self.dialog
 
     class Window(xbmcgui.WindowXMLDialog):
         HEADING_CTRL = 100
