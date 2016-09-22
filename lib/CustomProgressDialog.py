@@ -20,19 +20,24 @@ import xbmcaddon
 
 
 class ProgressDialog(object):
-    def create(self, heading, line1='', line2='', line3=''):
+    def __init__(self):
         addon = xbmcaddon.Addon('script.module.tknorris.shared')
         path = addon.getAddonInfo('path').decode('utf-8')
         self.dialog = ProgressDialog.Window('ProgressDialog.xml', path)
+        
+    def create(self, heading, line1='', line2='', line3=''):
         self.dialog.show()
         self.dialog.setHeading(heading)
-        self.update(0, line1, line2, line3)
+        self.dialog.setLine1(line1)
+        self.dialog.setLine2(line2)
+        self.dialog.setLine3(line3)
     
     def update(self, percent, line1='', line2='', line3=''):
-        self.dialog.setProgress(percent)
-        if line1: self.dialog.setLine1(line1)
-        if line2: self.dialog.setLine2(line2)
-        if line3: self.dialog.setLine3(line3)
+        if self.dialog is not None:
+            self.dialog.setProgress(percent)
+            if line1: self.dialog.setLine1(line1)
+            if line2: self.dialog.setLine2(line2)
+            if line3: self.dialog.setLine3(line3)
     
     def iscanceled(self):
         return self.dialog.cancel
@@ -49,12 +54,10 @@ class ProgressDialog(object):
         ACTION_PREVIOUS_MENU = 10
         ACTION_BACK = 92
         CANCEL_BUTTON = 200
+        cancel = False
             
         def onInit(self):
-            self.cancel = False
-            self.setLine1(self.line1)
-            self.setLine2(self.line2)
-            self.setLine3(self.line3)
+            pass
             
         def onAction(self, action):
             # log_utils.log('Action: %s' % (action.getId()), log_utils.LOGDEBUG, COMPONENT)
