@@ -20,12 +20,12 @@ import xbmcaddon
 
 
 class ProgressDialog(object):
-    def __init__(self):
+    dialog = None
+        
+    def create(self, heading, line1='', line2='', line3=''):
         addon = xbmcaddon.Addon('script.module.tknorris.shared')
         path = addon.getAddonInfo('path').decode('utf-8')
         self.dialog = ProgressDialog.Window('ProgressDialog.xml', path)
-        
-    def create(self, heading, line1='', line2='', line3=''):
         self.dialog.show()
         self.dialog.setHeading(heading)
         self.dialog.setLine1(line1)
@@ -40,11 +40,15 @@ class ProgressDialog(object):
             if line3: self.dialog.setLine3(line3)
     
     def iscanceled(self):
-        return self.dialog.cancel
+        if self.dialog is not None:
+            return self.dialog.cancel
+        else:
+            return False
     
     def close(self):
-        self.dialog.close()
-        del self.dialog
+        if self.dialog is not None:
+            self.dialog.close()
+            del self.dialog
 
     class Window(xbmcgui.WindowXMLDialog):
         HEADING_CTRL = 100
