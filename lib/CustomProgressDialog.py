@@ -16,11 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import xbmcgui
-import kodi
+import xbmcaddon
+
 
 class ProgressDialog(object):
     def create(self, heading, line1='', line2='', line3=''):
-        self.dialog = ProgressDialog.Window('ProgressDialog.xml', kodi.get_path())
+        addon = xbmcaddon.Addon('script.module.tknorris.shared')
+        path = addon.getAddonInfo('path').decode('utf-8')
+        self.dialog = ProgressDialog.Window('ProgressDialog.xml', path)
         self.dialog.show()
         self.dialog.setHeading(heading)
         self.update(0, line1, line2, line3)
