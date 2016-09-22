@@ -1,3 +1,6 @@
+[B]Version 0.0.7[/B]
+- More CustomProgressDialog fixes
+
 [B]Version 0.0.6[/B]
 - Fix CustomProgressDialog xml reference
 
