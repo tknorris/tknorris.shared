@@ -1,3 +1,6 @@
+[B]Version 0.0.6[/B]
+- Fix CustomProgressDialog xml reference
+
 [B]Version 0.0.5[/B]
 - Add close_all
 - Add custom progress dialog fallback
