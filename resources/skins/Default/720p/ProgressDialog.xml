@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
 	<defaultcontrol always="false">200</defaultcontrol>
-	<zorder>100</zorder>
+	<zorder>0</zorder>
 	<coordinates>
 		<system>1</system>
 		<left>335</left>
