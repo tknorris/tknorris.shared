@@ -225,7 +225,7 @@ class ProgressDialog(object):
             msg = line1 + line2 + line3
             pd.create(self.heading, msg)
         else:
-            if not xbmc.getCondVisibility('Window.IsVisible(progressdialog)'):
+            if xbmc.getCondVisibility('Window.IsVisible(progressdialog)'):
                 pd = CustomProgressDialog.ProgressDialog()
             else:
                 pd = xbmcgui.DialogProgress()
