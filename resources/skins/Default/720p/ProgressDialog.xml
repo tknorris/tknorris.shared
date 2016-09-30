@@ -102,16 +102,29 @@
 			<texture></texture>
 			<aspectratio>keep</aspectratio>
 		</control>
-		<control type="button" id="200">
-			<description>Cancel Button</description>
-			<left>195</left>
-			<top>185</top>
-			<width>220</width>
-			<height>90</height>
-			<align>center</align>
-			<aligny>center</aligny>
-			<label>Cancel</label>
-			<font>font12_title</font>
-		</control>
+        <control type="button" id="200">
+            <description>Cancel Button (Krypton)</description>
+            <left>195</left>
+            <top>185</top>
+            <width>220</width>
+            <height>90</height>
+            <align>center</align>
+            <aligny>center</aligny>
+            <label>Cancel</label>
+            <font>font12_title</font>
+            <visible>SubString(System.BuildVersion,17,left)</visible>
+        </control>
+        <control type="button" id="200">
+            <description>Cancel Button (Jarvis)</description>
+            <left>195</left>
+            <top>205</top>
+            <width>220</width>
+            <height>45</height>
+            <align>center</align>
+            <aligny>center</aligny>
+            <label>Cancel</label>
+            <font>font12_title</font>
+            <visible>!SubString(System.BuildVersion,17,left)</visible>
+        </control>
 	</controls>
 </window>
