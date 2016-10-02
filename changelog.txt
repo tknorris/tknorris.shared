@@ -1,3 +1,6 @@
+[B]Version 0.0.9[/B]
+- Improve CustomProgressDialog cancel button
+
 [B]Version 0.0.8[/B]
 - Drop zorder of progress dialog to 0
 - Allow user to specify location of Progress Dialog XML
