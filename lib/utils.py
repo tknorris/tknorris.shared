@@ -40,8 +40,8 @@ BROWSER_UA = 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:
 INTERVALS = 5
 WATCHLIST_SLUG = 'watchlist_slug'
 
-def make_list_item(label, meta, make_art=None):
-    art = {} if make_art is None else make_art(meta)
+def make_list_item(label, meta, art):
+    if art is None: art = {}
     listitem = xbmcgui.ListItem(label, iconImage=art['thumb'], thumbnailImage=art['thumb'])
     listitem.setProperty('fanart_image', art['fanart'])
     listitem.setProperty('isPlayable', 'false')
