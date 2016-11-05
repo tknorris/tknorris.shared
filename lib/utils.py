@@ -40,14 +40,17 @@ BROWSER_UA = 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:
 INTERVALS = 5
 WATCHLIST_SLUG = 'watchlist_slug'
 
-def make_list_item(label, meta, art):
-    if art is None: art = {}
+def make_list_item(label, meta, art=None, cast=None):
+    if art is None: art = {'thumb': '', 'fanart': ''}
+    if cast is None: cast = []
     listitem = xbmcgui.ListItem(label, iconImage=art['thumb'], thumbnailImage=art['thumb'])
     listitem.setProperty('fanart_image', art['fanart'])
     listitem.setProperty('isPlayable', 'false')
     listitem.addStreamInfo('video', {})
     try: listitem.setArt(art)
-    except: pass
+    except AttributeError: pass
+    try: listitem.setCast(cast)
+    except AttributeError: pass
     if 'ids' in meta and 'imdb' in meta['ids']: listitem.setProperty('imdb_id', str(meta['ids']['imdb']))
     if 'ids' in meta and 'tvdb' in meta['ids']: listitem.setProperty('tvdb_id', str(meta['ids']['tvdb']))
     return listitem
