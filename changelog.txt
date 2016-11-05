@@ -1,3 +1,8 @@
+[B]Version 0.0.11[/B]
+- Handle art directly
+- Add real busy dialog (Krypton only)
+- Add support for setCast() (Krypton only)
+
 [B]Version 0.0.9[/B]
 - Improve CustomProgressDialog cancel button
 
