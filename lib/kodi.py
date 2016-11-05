@@ -198,16 +198,38 @@ class Translations(object):
             return string_id
 
 class WorkingDialog(object):
+    wd = None
+    
     def __init__(self):
-        xbmc.executebuiltin('ActivateWindow(busydialog)')
+        try:
+            self.wd = xbmcgui.DialogBusy()
+            self.wd.create()
+            self.update(0)
+        except:
+            xbmc.executebuiltin('ActivateWindow(busydialog)')
     
     def __enter__(self):
         return self
     
     def __exit__(self, type, value, traceback):
-        xbmc.executebuiltin('Dialog.Close(busydialog)')
+        if self.wd is not None:
+            self.wd.close()
+        else:
+            xbmc.executebuiltin('Dialog.Close(busydialog)')
+            
+    def is_canceled(self):
+        if self.wd is not None:
+            return self.wd.iscanceled()
+        else:
+            return False
+        
+    def update(self, percent):
+        if self.wd is not None:
+            self.wd.update(percent)
 
 class ProgressDialog(object):
+    pd = None
+    
     def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0):
         self.begin = time.time()
         self.timer = timer
@@ -216,8 +238,6 @@ class ProgressDialog(object):
         if active and not timer:
             self.pd = self.__create_dialog(line1, line2, line3)
             self.pd.update(0)
-        else:
-            self.pd = None
 
     def __create_dialog(self, line1, line2, line3):
         if self.background:
@@ -238,7 +258,6 @@ class ProgressDialog(object):
     def __exit__(self, type, value, traceback):
         if self.pd is not None:
             self.pd.close()
-            del self.pd
     
     def is_canceled(self):
         if self.pd is not None and not self.background:
@@ -259,6 +278,7 @@ class ProgressDialog(object):
 
 class CountdownDialog(object):
     __INTERVALS = 5
+    pd = None
     
     def __init__(self, heading, line1='', line2='', line3='', active=True, countdown=60, interval=5):
         self.heading = heading
@@ -274,8 +294,6 @@ class CountdownDialog(object):
             pd.create(self.heading, line1, line2, line3)
             pd.update(100)
             self.pd = pd
-        else:
-            self.pd = None
 
     def __enter__(self):
         return self
@@ -283,7 +301,6 @@ class CountdownDialog(object):
     def __exit__(self, type, value, traceback):
         if self.pd is not None:
             self.pd.close()
-            del self.pd
     
     def start(self, func, args=None, kwargs=None):
         if args is None: args = []
