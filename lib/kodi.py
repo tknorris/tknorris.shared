@@ -68,6 +68,9 @@ def get_id():
 def get_name():
     return addon.getAddonInfo('name')
 
+def has_addon(addon_id):
+    return xbmc.getCondVisibility('System.HasAddon(%s)' % (addon_id)) == 1
+    
 def get_plugin_url(queries):
     try:
         query = urllib.urlencode(queries)
