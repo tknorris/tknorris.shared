@@ -104,7 +104,7 @@ def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, to
     else:
         playable = 'true' if is_playable else 'false'
 
-    liz_url = get_plugin_url(queries)
+    liz_url = queries if isinstance(queries, basestring) else get_plugin_url(queries)
     if not list_item.getProperty('fanart_image'): list_item.setProperty('fanart_image', fanart)
     list_item.setInfo('video', {'title': list_item.getLabel()})
     list_item.setProperty('isPlayable', playable)
