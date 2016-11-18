@@ -1,3 +1,8 @@
+[B]Version 0.0.12[/B]
+- Add thumbnail log spam fix
+- Add has_addon
+- Allow queries to be a string
+
 [B]Version 0.0.11[/B]
 - Handle art directly
 - Add real busy dialog (Krypton only)
