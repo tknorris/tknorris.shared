@@ -71,6 +71,33 @@ def get_name():
 def has_addon(addon_id):
     return xbmc.getCondVisibility('System.HasAddon(%s)' % (addon_id)) == 1
     
+def get_kodi_version():
+    class MetaClass(type):
+        def __str__(self):
+            return '|%s| -> |%s|%s|%s|%s|%s|' % (self.version, self.major, self.minor, self.tag, self.tag_version, self.revision)
+        
+    class KodiVersion(object):
+        __metaclass__ = MetaClass
+        version = xbmc.getInfoLabel('System.BuildVersion').decode('utf-8')
+        match = re.search('([0-9]+)\.([0-9]+)', version)
+        if match: major, minor = match.groups()
+        match = re.search('-([a-zA-Z]+)([0-9]*)', version)
+        if match: tag, tag_version = match.groups()
+        match = re.search('\w+:(\w+-\w+)', version)
+        if match: revision = match.group(1)
+        
+        try: major = int(major)
+        except: major = 0
+        try: minor = int(minor)
+        except: minor = 0
+        try: revision = revision.decode('utf-8')
+        except: revision = u''
+        try: tag = tag.decode('utf-8')
+        except: tag = u''
+        try: tag_version = int(tag_version)
+        except: tag_version = 0
+    return KodiVersion
+        
 def get_plugin_url(queries):
     try:
         query = urllib.urlencode(queries)
