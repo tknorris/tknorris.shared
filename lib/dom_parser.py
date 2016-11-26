@@ -77,7 +77,7 @@ def _getDOMElements(item, name, attrs):
 
 def parse_dom(html, name='', attrs=None, ret=False):
     if attrs is None: attrs = {}
-    log_utils.log('parse_dom: Name: |%s| Attrs: |%s| Ret: |%s| - HTML: %s' % (name, attrs, ret, type(html)), log_utils.LOGDEBUG)
+    # log_utils.log('parse_dom: Name: |%s| Attrs: |%s| Ret: |%s| - HTML: %s' % (name, attrs, ret, type(html)), log_utils.LOGDEBUG)
     if isinstance(html, str):
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
