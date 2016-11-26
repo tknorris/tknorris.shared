@@ -1,3 +1,7 @@
+[B]Version 0.0.13[/B]
+- Add get_kodi_version
+- Reduce logging
+
 [B]Version 0.0.12[/B]
 - Add thumbnail log spam fix
 - Add has_addon
