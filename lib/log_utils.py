@@ -17,6 +17,9 @@
 """
 import time
 import kodi
+import cProfile
+import StringIO
+import pstats
 from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGNOTICE, LOGSEVERE, LOGWARNING  # @UnusedImport
 
 name = kodi.get_name()
@@ -43,6 +46,33 @@ def log(msg, level=LOGDEBUG, component=None):
         try: kodi.__log('Logging Failure: %s' % (e), level)
         except: pass  # just give up
 
+def profile(file_path, sort_by):
+    def decorator(method):
+        def method_profile_on(*args, **kwargs):
+            pr = cProfile.Profile(builtins=False)
+            pr.enable()
+            result = pr.runcall(method, *args, **kwargs)
+            pr.disable()
+            s = StringIO.StringIO()
+            params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
+            ps = pstats.Stats(pr, stream=s).sort_stats(*params)
+            ps.print_stats()
+            with open(file_path, 'w') as f:
+                f.write(s.getvalue())
+                
+            return result
+        
+        def method_profile_off(*args, **kwargs):
+            return method(*args, **kwargs)
+    
+        if __is_debugging():
+            return method_profile_on
+        else:
+            return method_profile_off
+        
+    return decorator
+    
+        
 def trace(method):
     #  @debug decorator
     def method_trace_on(*args, **kwargs):
@@ -63,9 +93,8 @@ def trace(method):
 def __is_debugging():
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Settings.getSettings', 'params': {'filter': {'section': 'system', 'category': 'logging'}}}
     js_data = kodi.execute_jsonrpc(command)
-    if 'result' in js_data and 'settings' in js_data['result']:
-        for item in js_data['result']['settings']:
-            if item['id'] == 'debug.showloginfo':
-                return item['value']
+    for item in js_data.get('result', {}).get('settings', {}):
+        if item['id'] == 'debug.showloginfo':
+            return item['value']
     
     return False
