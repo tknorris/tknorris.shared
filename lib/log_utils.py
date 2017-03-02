@@ -46,21 +46,25 @@ def log(msg, level=LOGDEBUG, component=None):
         try: kodi.__log('Logging Failure: %s' % (e), level)
         except: pass  # just give up
 
-def profile(file_path, sort_by):
+def profile(file_path, sort_by='time'):
     def decorator(method):
         def method_profile_on(*args, **kwargs):
-            pr = cProfile.Profile(builtins=False)
-            pr.enable()
-            result = pr.runcall(method, *args, **kwargs)
-            pr.disable()
-            s = StringIO.StringIO()
-            params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
-            ps = pstats.Stats(pr, stream=s).sort_stats(*params)
-            ps.print_stats()
-            with open(file_path, 'w') as f:
-                f.write(s.getvalue())
-                
-            return result
+            try:
+                pr = cProfile.Profile(builtins=False)
+                pr.enable()
+                result = pr.runcall(method, *args, **kwargs)
+                pr.disable()
+                s = StringIO.StringIO()
+                params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
+                ps = pstats.Stats(pr, stream=s).sort_stats(*params)
+                ps.print_stats()
+                with open(file_path, 'w') as f:
+                    f.write(s.getvalue())
+                    
+                return result
+            except Exception as e:
+                log('Profiler Error: %s' % (e), LOGWARNING)
+                return method(*args, **kwargs)
         
         def method_profile_off(*args, **kwargs):
             return method(*args, **kwargs)
@@ -71,7 +75,6 @@ def profile(file_path, sort_by):
             return method_profile_off
         
     return decorator
-    
         
 def trace(method):
     #  @debug decorator
