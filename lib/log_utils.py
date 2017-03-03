@@ -46,36 +46,44 @@ def log(msg, level=LOGDEBUG, component=None):
         try: kodi.__log('Logging Failure: %s' % (e), level)
         except: pass  # just give up
 
-def profile(file_path, sort_by='time'):
-    def decorator(method):
+class Profiler(object):
+    _profiler = None
+    file_path = None
+    sort_by = None
+    
+    @classmethod
+    def profile(cls, f):
         def method_profile_on(*args, **kwargs):
             try:
-                pr = cProfile.Profile(builtins=False)
-                pr.enable()
-                result = pr.runcall(method, *args, **kwargs)
-                pr.disable()
-                s = StringIO.StringIO()
-                params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
-                ps = pstats.Stats(pr, stream=s).sort_stats(*params)
-                ps.print_stats()
-                with open(file_path, 'w') as f:
-                    f.write(s.getvalue())
-                    
+                cls._profiler.enable()
+                result = cls._profiler.runcall(f, *args, **kwargs)
+                cls._profiler.disable()
                 return result
             except Exception as e:
                 log('Profiler Error: %s' % (e), LOGWARNING)
-                return method(*args, **kwargs)
+                return f(*args, **kwargs)
         
         def method_profile_off(*args, **kwargs):
-            return method(*args, **kwargs)
+            return f(*args, **kwargs)
     
-        if __is_debugging():
+        if _is_debugging():
+            cls._profiler = cProfile.Profile(builtins=False)
             return method_profile_on
         else:
             return method_profile_off
-        
-    return decorator
-        
+    
+        return profile  # @UndefinedVariable
+    
+    @classmethod
+    def dump_stats(cls, file_path, sort_by='time'):
+        if cls._profiler is not None:
+            s = StringIO.StringIO()
+            params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
+            ps = pstats.Stats(cls._profiler, stream=s).sort_stats(*params)
+            ps.print_stats()
+            with open(file_path, 'w') as f:
+                f.write(s.getvalue())
+
 def trace(method):
     #  @debug decorator
     def method_trace_on(*args, **kwargs):
@@ -88,12 +96,12 @@ def trace(method):
     def method_trace_off(*args, **kwargs):
         return method(*args, **kwargs)
 
-    if __is_debugging():
+    if _is_debugging():
         return method_trace_on
     else:
         return method_trace_off
 
-def __is_debugging():
+def _is_debugging():
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Settings.getSettings', 'params': {'filter': {'section': 'system', 'category': 'logging'}}}
     js_data = kodi.execute_jsonrpc(command)
     for item in js_data.get('result', {}).get('settings', {}):
