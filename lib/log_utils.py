@@ -47,17 +47,17 @@ def log(msg, level=LOGDEBUG, component=None):
         except: pass  # just give up
 
 class Profiler(object):
-    _profiler = None
-    file_path = None
-    sort_by = None
+    def __init__(self, file_path, sort_by='time', builtins=False):
+        self._profiler = cProfile.Profile(builtins=builtins)
+        self.file_path = file_path
+        self.sort_by = sort_by
     
-    @classmethod
-    def profile(cls, f):
+    def profile(self, f):
         def method_profile_on(*args, **kwargs):
             try:
-                cls._profiler.enable()
-                result = cls._profiler.runcall(f, *args, **kwargs)
-                cls._profiler.disable()
+                self._profiler.enable()
+                result = self._profiler.runcall(f, *args, **kwargs)
+                self._profiler.disable()
                 return result
             except Exception as e:
                 log('Profiler Error: %s' % (e), LOGWARNING)
@@ -67,25 +67,24 @@ class Profiler(object):
             return f(*args, **kwargs)
     
         if _is_debugging():
-            cls._profiler = cProfile.Profile(builtins=False)
             return method_profile_on
         else:
             return method_profile_off
     
-        return profile  # @UndefinedVariable
-    
-    @classmethod
-    def dump_stats(cls, file_path, sort_by='time'):
-        if cls._profiler is not None:
+    def __del__(self):
+        self.dump_stats()
+        
+    def dump_stats(self):
+        if self._profiler is not None:
             s = StringIO.StringIO()
-            params = (sort_by,) if isinstance(sort_by, basestring) else sort_by
-            ps = pstats.Stats(cls._profiler, stream=s).sort_stats(*params)
+            params = (self.sort_by,) if isinstance(self.sort_by, basestring) else self.sort_by
+            ps = pstats.Stats(self._profiler, stream=s).sort_stats(*params)
             ps.print_stats()
-            with open(file_path, 'w') as f:
-                f.write(s.getvalue())
-
+            if self.file_path is not None:
+                with open(self.file_path, 'w') as f:
+                    f.write(s.getvalue())
+    
 def trace(method):
-    #  @debug decorator
     def method_trace_on(*args, **kwargs):
         start = time.time()
         result = method(*args, **kwargs)
