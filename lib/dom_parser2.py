@@ -71,9 +71,9 @@ def __get_dom_elements(item, name, attrs):
 
 def __get_attribs(element):
     attribs = {}
-    for match in re.finditer('''\s+(?P<key>[^=]+)=(?:(?P<delim>["'])(?P<value1>.*?)(?P=delim)|(?P<value2>[^"'][^>\s]*))''', element):
+    for match in re.finditer('''\s+(?P<key>[^=]+)=\s*(?:(?P<delim>["'])(?P<value1>.*?)(?P=delim)|(?P<value2>[^"'][^>\s]*))''', element):
         match = match.groupdict()
-        attribs[match['key'].lower()] = match.get('value1') or match.get('value2')
+        attribs[match['key'].lower().strip()] = match.get('value1') or match.get('value2')
     return attribs
 
 def parse_dom(html, name='', attrs=None, req=False):
