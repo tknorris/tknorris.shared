@@ -22,6 +22,7 @@ from collections import namedtuple
 DomMatch = namedtuple('DOMMatch', ['attrs', 'content'])
 
 def __get_dom_content(html, name, match):
+    if match.endswith('/>'): return ''
     end_str = "</%s" % (name)
     start_str = '<%s' % (name)
 
@@ -73,7 +74,11 @@ def __get_attribs(element):
     attribs = {}
     for match in re.finditer('''\s+(?P<key>[^=]+)=\s*(?:(?P<delim>["'])(?P<value1>.*?)(?P=delim)|(?P<value2>[^"'][^>\s]*))''', element):
         match = match.groupdict()
-        attribs[match['key'].lower().strip()] = match.get('value1') or match.get('value2')
+        value1 = match.get('value1')
+        value2 = match.get('value2')
+        value = value1 if value1 is not None else value2
+        if value is None: continue
+        attribs[match['key'].lower().strip()] = value
     return attribs
 
 def parse_dom(html, name='', attrs=None, req=False):
