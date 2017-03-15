@@ -26,7 +26,7 @@ def __get_dom_content(html, name, match):
     
     # override tag name with tag from match if possible
     tag = re.match('<([^\s/>]+)', match)
-    if tag: name = match.group(1)
+    if tag: name = tag.group(1)
     
     start_str = '<%s' % (name)
     end_str = "</%s" % (name)
