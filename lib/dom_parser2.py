@@ -23,9 +23,15 @@ DomMatch = namedtuple('DOMMatch', ['attrs', 'content'])
 
 def __get_dom_content(html, name, match):
     if match.endswith('/>'): return ''
-    end_str = "</%s" % (name)
+    
+    # override tag name with tag from match if possible
+    tag = re.match('<([^\s/>]+)', match)
+    if tag: name = match.group(1)
+    
     start_str = '<%s' % (name)
+    end_str = "</%s" % (name)
 
+    # start/end tags without matching case cause issues
     start = html.find(match)
     end = html.find(end_str, start)
     pos = html.find(start_str, start + 1)
