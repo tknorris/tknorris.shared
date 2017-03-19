@@ -20,6 +20,7 @@ import log_utils
 from collections import namedtuple
 
 DomMatch = namedtuple('DOMMatch', ['attrs', 'content'])
+re_type = type(re.compile(''))
 
 def __get_dom_content(html, name, match):
     if match.endswith('/>'): return ''
@@ -62,11 +63,23 @@ def __get_dom_elements(item, name, attrs):
     else:
         last_list = None
         for key, value in attrs.iteritems():
-            pattern = '''(<%s\s[^>]*%s=['"]%s['"][^>]*>)''' % (name, key, value)
+            value_is_regex = isinstance(value, re_type)
+            pattern = '''(<{tag}\s[^>]*{key}=(?P<delim>['"])(.*?)(?P=delim)[^>]*>)'''.format(tag=name, key=key)
             this_list = re.findall(pattern, item, re.M | re. S | re.I)
-            if not this_list and ' ' not in value:
-                pattern = '''(<%s\s[^>]*%s=%s[^>]*>)''' % (name, key, value)
-                this_list = re.findall(pattern, item, re.M | re. S | re.I)
+            if value_is_regex:
+                this_list = [r[0] for r in this_list if re.match(value, r[2])]
+            else:
+                this_list = [r[0] for r in this_list if value in r[2]]
+                
+            if not this_list:
+                has_space = (value_is_regex and ' ' in value.pattern) or ' ' in value
+                if not has_space:
+                    pattern = '''(<{tag}\s[^>]*{key}=([^\s>]*)[^>]*>)'''.format(tag=name, key=key)
+                    this_list = re.findall(pattern, item, re.M | re. S | re.I)
+                    if value_is_regex:
+                        this_list = [r[0] for r in this_list if re.match(value, r[1])]
+                    else:
+                        this_list = [r[0] for r in this_list if value in r[1]]
     
             if last_list is None:
                 last_list = this_list
