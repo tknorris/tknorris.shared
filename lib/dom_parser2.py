@@ -69,17 +69,17 @@ def __get_dom_elements(item, name, attrs):
             if value_is_regex:
                 this_list = [r[0] for r in this_list if re.match(value, r[2])]
             else:
-                this_list = [r[0] for r in this_list if value in r[2]]
+                this_list = [r[0] for r in this_list if any(i for i in r[2].split(' ') if i == value)]
                 
             if not this_list:
-                has_space = (value_is_regex and ' ' in value.pattern) or ' ' in value
+                has_space = (value_is_regex and ' ' in value.pattern) or (isinstance(value, basestring) and ' ' in value)
                 if not has_space:
                     pattern = '''(<{tag}\s[^>]*{key}=([^\s>]*)[^>]*>)'''.format(tag=name, key=key)
                     this_list = re.findall(pattern, item, re.M | re. S | re.I)
                     if value_is_regex:
                         this_list = [r[0] for r in this_list if re.match(value, r[1])]
                     else:
-                        this_list = [r[0] for r in this_list if value in r[1]]
+                        this_list = [r[0] for r in this_list if value == r[1]]
     
             if last_list is None:
                 last_list = this_list
