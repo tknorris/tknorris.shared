@@ -15,9 +15,11 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import re
 import dom_parser2
 
 def parse_dom(html, name='', attrs=None, ret=False):
+    if attrs: attrs = dict((key, re.compile(value)) for key, value in attrs.iteritems())
     results = dom_parser2.parse_dom(html, name, attrs, ret)
     if ret:
         results = [result.attrs[ret] for result in results]

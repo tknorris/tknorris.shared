@@ -131,7 +131,7 @@ def parse_dom(html, name='', attrs=None, req=False):
     if req:
         if not isinstance(req, list):
             req = [req]
-        req = set([tag.lower() for tag in req])
+        req = set([key.lower() for key in req])
         
     all_results = []
     for item in html:
