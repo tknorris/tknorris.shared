@@ -64,22 +64,24 @@ def __get_dom_elements(item, name, attrs):
         last_list = None
         for key, value in attrs.iteritems():
             value_is_regex = isinstance(value, re_type)
+            value_is_str = isinstance(value, basestring)
             pattern = '''(<{tag}\s[^>]*{key}=(?P<delim>['"])(.*?)(?P=delim)[^>]*>)'''.format(tag=name, key=key)
-            this_list = re.findall(pattern, item, re.M | re. S | re.I)
+            re_list = re.findall(pattern, item, re.M | re. S | re.I)
             if value_is_regex:
-                this_list = [r[0] for r in this_list if re.match(value, r[2])]
+                this_list = [r[0] for r in re_list if re.match(value, r[2])]
             else:
-                this_list = [r[0] for r in this_list if any(i for i in r[2].split(' ') if i == value)]
+                temp_value = [value] if value_is_str else value
+                this_list = [r[0] for r in re_list if set(temp_value) <= set(r[2].split(' '))]
                 
-            if not this_list:
-                has_space = (value_is_regex and ' ' in value.pattern) or (isinstance(value, basestring) and ' ' in value)
+            if not re_list:
+                has_space = (value_is_regex and ' ' in value.pattern) or (value_is_str and ' ' in value)
                 if not has_space:
-                    pattern = '''(<{tag}\s[^>]*{key}=([^\s>]*)[^>]*>)'''.format(tag=name, key=key)
-                    this_list = re.findall(pattern, item, re.M | re. S | re.I)
+                    pattern = '''(<{tag}\s[^>]*{key}=([^\s/>]*)[^>]*>)'''.format(tag=name, key=key)
+                    re_list = re.findall(pattern, item, re.M | re. S | re.I)
                     if value_is_regex:
-                        this_list = [r[0] for r in this_list if re.match(value, r[1])]
+                        this_list = [r[0] for r in re_list if re.match(value, r[1])]
                     else:
-                        this_list = [r[0] for r in this_list if value == r[1]]
+                        this_list = [r[0] for r in re_list if value == r[1]]
     
             if last_list is None:
                 last_list = this_list
