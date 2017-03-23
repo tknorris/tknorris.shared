@@ -22,7 +22,7 @@ def parse_dom(html, name='', attrs=None, ret=False):
     if attrs: attrs = dict((key, re.compile(value)) for key, value in attrs.iteritems())
     results = dom_parser2.parse_dom(html, name, attrs, ret)
     if ret:
-        results = [result.attrs[ret] for result in results]
+        results = [result.attrs[ret.lower()] for result in results]
     else:
         results = [result.content for result in results]
     return results
