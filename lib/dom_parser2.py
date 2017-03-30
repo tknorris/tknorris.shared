@@ -106,7 +106,7 @@ def parse_dom(html, name='', attrs=None, req=False):
     if attrs is None: attrs = {}
     name = name.strip()
     # log_utils.log('parse_dom: Name: |%s| Attrs: |%s| Ret: |%s| - HTML: %s' % (name, attrs, req, type(html)), log_utils.LOGDEBUG)
-    if isinstance(html, unicode):
+    if isinstance(html, unicode) or isinstance(html, DomMatch):
         html = [html]
     elif isinstance(html, str):
         try:
@@ -137,6 +137,9 @@ def parse_dom(html, name='', attrs=None, req=False):
         
     all_results = []
     for item in html:
+        if isinstance(item, DomMatch):
+            item = item.content
+            
         results = []
         for element in __get_dom_elements(item, name, attrs):
             attribs = __get_attribs(element)
