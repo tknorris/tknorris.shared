@@ -73,7 +73,7 @@ def __get_dom_elements(item, name, attrs):
                 temp_value = [value] if value_is_str else value
                 this_list = [r[0] for r in re_list if set(temp_value) <= set(r[2].split(' '))]
                 
-            if not re_list:
+            if not this_list:
                 has_space = (value_is_regex and ' ' in value.pattern) or (value_is_str and ' ' in value)
                 if not has_space:
                     pattern = '''(<{tag}[^>]*\s{key}=([^\s/>]*)[^>]*>)'''.format(tag=name, key=key)
