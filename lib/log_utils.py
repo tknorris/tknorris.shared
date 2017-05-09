@@ -23,10 +23,11 @@ import pstats
 from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGNOTICE, LOGSEVERE, LOGWARNING  # @UnusedImport
 
 name = kodi.get_name()
+addon_debug = kodi.get_setting('addon_debug') == 'true'
 
 def log(msg, level=LOGDEBUG):
     # override message level to force logging when addon logging turned on
-    if kodi.get_setting('addon_debug') == 'true' and level == LOGDEBUG:
+    if addon_debug and level == LOGDEBUG:
         level = LOGNOTICE
     
     try:
