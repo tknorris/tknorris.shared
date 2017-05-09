@@ -23,14 +23,8 @@ import pstats
 from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGNOTICE, LOGSEVERE, LOGWARNING  # @UnusedImport
 
 name = kodi.get_name()
-enabled_comp = kodi.get_setting('enabled_comp')
-if enabled_comp:
-    enabled_comp = enabled_comp.split(',')
-else:
-    enabled_comp = None
 
-def log(msg, level=LOGDEBUG, component=None):
-    req_level = level
+def log(msg, level=LOGDEBUG):
     # override message level to force logging when addon logging turned on
     if kodi.get_setting('addon_debug') == 'true' and level == LOGDEBUG:
         level = LOGNOTICE
@@ -39,8 +33,7 @@ def log(msg, level=LOGDEBUG, component=None):
         if isinstance(msg, unicode):
             msg = '%s (ENCODED)' % (msg.encode('utf-8'))
 
-        if req_level != LOGDEBUG or (enabled_comp is None or component in enabled_comp):
-            kodi.__log('%s: %s' % (name, msg), level)
+        kodi.__log('%s: %s' % (name, msg), level)
             
     except Exception as e:
         try: kodi.__log('Logging Failure: %s' % (e), level)
