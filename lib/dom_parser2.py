@@ -105,7 +105,7 @@ def __get_attribs(element):
         attribs[match['key'].lower().strip()] = value
     return attribs
 
-def parse_dom(html, name='', attrs=None, req=False):
+def parse_dom(html, name='', attrs=None, req=False, exclude_comments=False):
     if attrs is None: attrs = {}
     name = name.strip()
     # logger.log('parse_dom: Name: |%s| Attrs: |%s| Ret: |%s| - HTML: %s' % (name, attrs, req, type(html)), log_utils.LOGDEBUG)
@@ -143,6 +143,9 @@ def parse_dom(html, name='', attrs=None, req=False):
         if isinstance(item, DomMatch):
             item = item.content
             
+        if exclude_comments:
+            item = re.sub(re.compile('<!--.*?-->', re.DOTALL), '', item)
+        
         results = []
         for element in __get_dom_elements(item, name, attrs):
             attribs = __get_attribs(element)
